@@ -1,3 +1,8 @@
+# Команда:
+- Кирилл Берлов
+- Соловьёв Кирилл
+- Несветайлов Владислав
+
 # Mire
 
 It's a nonviolent MUD. (Multi-User Dungeon)
