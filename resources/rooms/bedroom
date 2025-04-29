@@ -1,0 +1,3 @@
+{:desc "You find yourself in a bedroom with lots of paintings and a large double bed."
+ :items #{:bunny}
+ :exits {:east :hallway}}

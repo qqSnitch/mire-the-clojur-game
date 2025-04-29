@@ -74,6 +74,20 @@
       (str item " is not in any room."))
     "You need to be carrying the detector for that."))
 
+(defn pet
+  "If you have an animal, you can pet it."  
+  [animal]  
+  (let [animal-key (keyword animal)]  
+    (if (contains? #{:bunny :turtle} animal-key)  
+      (if (@player/*inventory* animal-key)
+        (str "You pet the " animal "."  
+        (doseq [inhabitant (disj @(:inhabitants @player/*current-room*)
+                             player/*name*)]
+            (binding [*out* (player/streams inhabitant)]
+                (println (str player/*name* " pet the " animal))
+                (println player/prompt))))
+        (str "You dont have " animal " in inventory."))  
+     "You cant pet that."))) 
 (defn say
   "Say something out loud so everyone in the room can hear."
   [& words]
@@ -105,6 +119,7 @@
                "detect" detect
                "look" look
                "say" say
+               "pet" pet
                "help" help})
 
 ;; Command handling
