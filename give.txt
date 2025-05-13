@@ -23,3 +23,6 @@
            (println (str player/*name* " gave you " thing "."))
            (println player/prompt))
          (str "You gave " thing " to " recipient "."))))))
+
+
+No such var: player/get-inventory
