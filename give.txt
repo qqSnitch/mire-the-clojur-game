@@ -1,0 +1,16 @@
+(defn give
+  "Give an item to another player in the same room."
+  [thing recipient]
+  (dosync
+   (if (player/carrying? thing)
+     (if (contains? @(:inhabitants @player/*current-room*) recipient)
+       (let [recipient-inventory (player/get-inventory recipient)]
+         (move-between-refs (keyword thing)
+                           player/*inventory*
+                           recipient-inventory)
+         (binding [*out* (player/streams recipient)]
+           (println (str player/*name* " gave you " thing "."))
+           (println player/prompt))
+         (str "You gave " thing " to " recipient "."))
+       (str recipient " is not in this room."))
+     (str "You're not carrying a " thing "."))))
