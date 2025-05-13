@@ -1,0 +1,25 @@
+(defn disconnect-player [name]
+  (dosync
+   (when-let [out (get @streams name)]
+     (binding [*out* out]
+       (println "Вы умерли!")
+       (.close out))
+   (alter streams dissoc name)))
+
+
+
+
+(defn drink [potion]
+  (dosync
+   (cond
+     (not (player/carrying? potion))
+       (str "У вас нет зелья " potion ".")
+     
+     (= potion "poison")  ; Проверяем специальное зелье
+       (do
+         (alter player/*inventory* disj :poison)
+         (player/disconnect-player player/*name*)
+         "Вы выпили смертельное зелье...")
+     
+     :else
+       (str "Вы выпили " potion ", но ничего не произошло."))))
