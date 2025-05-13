@@ -1,0 +1,30 @@
+(defn give
+  "Give an item (key, detector or animal) to another player in the same room."
+  [item recipient]
+  (dosync
+   (let [item-key (keyword item)
+         recipient (keyword recipient)]
+     (cond
+       ;; Check if recipient is in the same room
+       (not (contains? @(:inhabitants @player/*current-room*) recipient))
+       (str recipient " is not here.")
+       
+       ;; Check if player has the item
+       (not (@player/*inventory* item-key))
+       (str "You don't have " item ".")
+       
+       ;; Check if item is allowed to be given (key, detector or animal)
+       (not (contains? #{:detector :bunny :turtle :redkey :bluekey :greenkey} item-key))
+       (str "You can't give " item ".")
+       
+       ;; Perform the transfer
+       :else
+       (do
+         (move-between-refs item-key
+                           player/*inventory*
+                           (player/inventory recipient))
+         ;; Notify both players
+         (binding [*out* (player/streams recipient)]
+           (println (str player/*name* " gave you " item "."))
+           (println player/prompt))
+         (str "You gave " item " to " recipient "."))))))
