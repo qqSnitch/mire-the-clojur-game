@@ -1,0 +1,6 @@
+(defn get-inventory
+  "Get another player's inventory by name."
+  [player-name]
+  (-> (deref players)
+      (get player-name)
+      :inventory))
