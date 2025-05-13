@@ -88,6 +88,7 @@
                 (println player/prompt))))
         (str "You dont have " animal " in inventory."))  
      "You cant pet that."))) 
+
 (defn say
   "Say something out loud so everyone in the room can hear."
   [& words]
