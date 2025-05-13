@@ -47,3 +47,6 @@
     (player/register-connection! player/*name* out)
     ;; остальная логика обработки
     ))
+
+Syntax error (FileNotFoundException) compiling at (mire/player.clj:1:1).
+Could not locate clojure/tools/logging__init.class, clojure/tools/logging.clj or clojure/tools/logging.cljc on classpath.
