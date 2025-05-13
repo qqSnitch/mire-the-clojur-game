@@ -1,0 +1,42 @@
+(defn give
+  "Give an item to another player in the same room."
+  [item recipient]
+  (dosync
+   (let [item-key (keyword item)
+         current-room-inhabitants @(:inhabitants @player/*current-room*)
+         recipient-exists? (contains? current-room-inhabitants recipient)]
+     (cond
+       (not (player/carrying? item))
+         (str "You're not carrying a " item ".")
+       
+       (not recipient-exists?)
+         (str recipient " is not in this room.")
+       
+       :else
+         (do
+           ;; Перемещаем предмет в инвентарь получателя
+           (let [recipient-inventory (get @rooms/player-inventories recipient)]
+             (when recipient-inventory
+               (move-between-refs item-key
+                                 player/*inventory*
+                                 recipient-inventory)))
+           
+           ;; Уведомляем игроков
+           (doseq [inhabitant (disj current-room-inhabitants player/*name*)]
+             (binding [*out* (player/streams inhabitant)]
+               (println (str player/*name* " gave " item " to " recipient "."))
+               (println player/prompt)))
+           
+           (str "You gave " item " to " recipient "."))))))
+
+
+
+(def player-inventories (atom {}))
+
+
+
+(defn init-player [name]
+  (dosync
+   (let [inventory (ref #{})]
+     (swap! rooms/player-inventories assoc name inventory)
+     inventory)))
