@@ -1,0 +1,49 @@
+(ns mire.player
+  (:require [mire.rooms :as rooms]
+            [clojure.tools.logging :as log]))
+
+;; Хранилище соединений (теперь atom вместо ref)
+(def ^:dynamic *connections* (atom {}))
+
+(defn register-connection! [name socket-out]
+  (swap! *connections* assoc name socket-out))
+
+(defn disconnect-player! [name]
+  (when-let [out (get @*connections* name)]
+    (try
+      (binding [*out* out]
+        (println "\n=== ВЫ УМЕРЛИ ===")
+        (println "Причина: смертельное зелье")
+        (.flush out))
+      (finally
+        (swap! *connections* dissoc name)
+        (swap! rooms/player-inventories dissoc name)
+        (try (.close out) (catch Exception _ nil))))))
+
+
+
+(defn drink [potion]
+  (dosync
+   (cond
+     (not (player/carrying? potion))
+     (str "У вас нет зелья " potion ".")
+     
+     (= potion "poison")
+     (do
+       (alter player/*inventory* disj :poison)
+       (future ; Запускаем в отдельном потоке
+         (player/disconnect-player! player/*name*)
+         (Thread/sleep 100) ; Даем время на отправку сообщения
+         (System/exit 0)) ; Завершаем клиентский процесс
+       "Вы выпили СМЕРТЕЛЬНОЕ зелье...")
+     
+     :else
+     (str "Вы выпили " potion ", но ничего не произошло."))))
+
+
+
+(defn handle-new-connection [socket]
+  (let [out (java.io.PrintWriter. (.getOutputStream socket) true)]
+    (player/register-connection! player/*name* out)
+    ;; остальная логика обработки
+    ))
