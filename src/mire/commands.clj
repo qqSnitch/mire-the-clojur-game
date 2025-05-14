@@ -107,6 +107,20 @@
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
 
+  (defn drink
+  "Drink something. If it's poison - you die."
+  [item]
+  (dosync
+   (if (player/carrying? item)
+     (if (= item "poison")
+       (do
+         (move-between-refs (keyword item)
+                           player/*inventory*
+                           (:items @player/*current-room*))         
+         (player/disconnect-player "You drank the poison and died!"))
+       (str "You drank the " item ". It's safe."))
+     (str "You're not carrying a " item ".")))
+
 ;; Command data
 
 (def commands {"move" move,
@@ -121,6 +135,7 @@
                "look" look
                "say" say
                "pet" pet
+               "drink" drink
                "help" help})
 
 ;; Command handling
