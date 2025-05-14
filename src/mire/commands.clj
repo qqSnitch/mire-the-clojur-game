@@ -1,7 +1,8 @@
 (ns mire.commands
   (:require [clojure.string :as str]
             [mire.rooms :as rooms]
-            [mire.player :as player]))
+            [mire.player :as player]
+            [clojure.set :as set]))
 
 (defn- move-between-refs
   "Move one instance of obj between from and to. Must call in a transaction."
@@ -78,17 +79,56 @@
   "If you have an animal, you can pet it."  
   [animal]  
   (let [animal-key (keyword animal)]  
-    (if (contains? #{:bunny :turtle} animal-key)  
+    (if (contains? #{:bunny :turtle :parrot} animal-key)  
       (if (@player/*inventory* animal-key)
-        (str "You pet the " animal "."  
-        (doseq [inhabitant (disj @(:inhabitants @player/*current-room*)
-                             player/*name*)]
-            (binding [*out* (player/streams inhabitant)]
-                (println (str player/*name* " pet the " animal))
-                (println player/prompt))))
-        (str "You dont have " animal " in inventory."))  
-     "You cant pet that."))) 
+        (do
+          (str "You pet the " animal "."  
+               (doseq [inhabitant (disj @(:inhabitants @player/*current-room*)
+                                   player/*name*)]
+                 (binding [*out* (player/streams inhabitant)]
+                   (println (str player/*name* " pets the " animal))
+                   (println player/prompt)))))
+        (str "You don't have a " animal " in your inventory."))  
+      "You can't pet that.")))
 
+(defn feed
+  "Feed an animal you have with food from your inventory."
+  [animal food]
+  (let [animal-key (keyword animal)
+        food-key (keyword food)]
+    (cond
+      (not (@player/*inventory* animal-key))
+      (str "You don't have a " animal " to feed.")
+      
+      (not (@player/*inventory* food-key))
+      (str "You don't have any " food " to feed.")
+      
+      (and (= animal-key :bunny) (#{:carrot :lettuce} food-key))
+      (do
+        (dosync (alter player/*inventory* disj food-key))
+        (str "The bunny happily eats the " food ". It looks grateful!"))
+      
+      (and (= animal-key :parrot) (#{:seeds :fruit} food-key))
+      (do
+        (dosync (alter player/*inventory* disj food-key))
+        (str "The parrot chirps happily as it eats the " food ". Squawk!"))
+      
+      :else
+      (str "The " animal " doesn't want to eat " food ".")))) 
+
+(defn emote
+    "Express an action or emotion (for example: 'emote dances' or 'emote laughs loudly')."
+    [& action]
+    (let [message (str/join " " action)]
+        (if (str/blank? message)
+            "Write emote (for example: 'emote smiles')."
+            (do
+                (doseq [inhabitant (disj @(:inhabitants @player/*current-room*)
+                                         player/*name*)]
+                    (binding [*out* (player/streams inhabitant)]
+                        (println (str player/*name* " " message))
+                        (println player/prompt)))
+                (str "You" " " message))))) 
 (defn say
   "Say something out loud so everyone in the room can hear."
   [& words]
@@ -107,20 +147,6 @@
                       (dissoc (ns-publics 'mire.commands)
                               'execute 'commands))))
 
-  (defn drink
-  "Drink something. If it's poison - you die."
-  [item]
-  (dosync
-   (if (player/carrying? item)
-     (if (= item "poison")
-       (do
-         (move-between-refs (keyword item)
-                           player/*inventory*
-                           (:items @player/*current-room*))         
-         (player/disconnect-player "You drank the poison and died!"))
-       (str "You drank the " item ". It's safe."))
-     (str "You're not carrying a " item ".")))
-
 ;; Command data
 
 (def commands {"move" move,
@@ -135,8 +161,9 @@
                "look" look
                "say" say
                "pet" pet
-               "drink" drink
-               "help" help})
+               "help" help
+               "emote" emote
+               "feed" feed})
 
 ;; Command handling
 
