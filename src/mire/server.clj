@@ -9,7 +9,7 @@
   "Drop all inventory and remove player from room and player list."
   (dosync
    (doseq [item @player/*inventory*]
-     (commands/discard item))
+     (commands/discard (name item)))
    (commute player/streams dissoc player/*name*)
    (commute (:inhabitants @player/*current-room*)
             disj player/*name*)))
@@ -23,8 +23,9 @@
 
 (defn- mire-handle-client [in out]
   (binding [*in* (io/reader in)
-            *out* (io/writer out)
-            *err* (io/writer System/err)]
+        *out* (io/writer out)
+        *err* (io/writer System/err)
+        player/*player-out* *out*] 
 
     ;; We have to nest this in another binding call instead of using
     ;; the one above so *in* and *out* will be bound to the socket

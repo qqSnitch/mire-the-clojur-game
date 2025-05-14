@@ -62,6 +62,9 @@ bot(Stream) :-
     % Регистрация бота
     format(Stream,'~s~n',["bot"]),
     flush_output(Stream),
+    sleep(2),
+    format(Stream,'~s~n',["say Hello everyone, bot is here!"]),
+    flush_output(Stream),
     sleep(1),
 
     % Основной цикл отправки команд
@@ -73,7 +76,11 @@ bot(Stream) :-
             Result = "Hello bot!"
             ->  format('Bot answer~n', []),
                 sleep(1),
-                format(Stream, '~s~n', ["say Hello there"]),
+                string_length(Last,Len),
+                NewLen is max(0, Len-14),
+                sub_string(Last,2,NewLen,_,Name),
+                atomic_list_concat(["say Hello there ", Name], Msg),
+                format(Stream, '~s~n', [Msg]),
                 flush_output(Stream),
                 sleep(1)
             ;   true
