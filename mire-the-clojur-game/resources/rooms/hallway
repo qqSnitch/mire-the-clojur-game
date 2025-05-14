@@ -1,3 +1,0 @@
-{:desc "You are in a long, low-lit hallway."
- :items #{:detector :carrot :seeds}
- :exits {:north :start :east :promenade :west :bedroom} }
